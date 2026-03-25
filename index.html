@@ -485,6 +485,15 @@ function buildShiftPanel(sh) {
       setCacheVal(sh.key,'dep',[...deps]);
       updateFooter(); renderSummary(); scheduleSave();
     });
+    dEl.addEventListener('paste',(e)=>{
+      e.preventDefault();
+      const text = (e.clipboardData||window.clipboardData).getData('text');
+      const values = text.split(/[\n\r\t]+/).map(v=>v.trim()).filter(v=>v!=='');
+      if(values.length<=1){ dEl.value=values[0]||''; deps[i]=dEl.value; setCacheVal(sh.key,'dep',[...deps]); updateFooter(); renderSummary(); scheduleSave(); return; }
+      values.forEach((v,offset)=>{ const idx=i+offset; if(idx<ROWS){ depInputs[idx].value=v; deps[idx]=v; } });
+      setCacheVal(sh.key,'dep',[...deps]); updateFooter(); renderSummary(); scheduleSave();
+      if(i+values.length<ROWS) depInputs[i+values.length].focus();
+    });
 
     const rEl=document.createElement('input');
     rEl.className='cell-input ret'; rEl.type='text'; rEl.inputMode='decimal';
@@ -493,6 +502,15 @@ function buildShiftPanel(sh) {
       rets[i]=rEl.value;
       setCacheVal(sh.key,'ret',[...rets]);
       updateFooter(); renderSummary(); scheduleSave();
+    });
+    rEl.addEventListener('paste',(e)=>{
+      e.preventDefault();
+      const text = (e.clipboardData||window.clipboardData).getData('text');
+      const values = text.split(/[\n\r\t]+/).map(v=>v.trim()).filter(v=>v!=='');
+      if(values.length<=1){ rEl.value=values[0]||''; rets[i]=rEl.value; setCacheVal(sh.key,'ret',[...rets]); updateFooter(); renderSummary(); scheduleSave(); return; }
+      values.forEach((v,offset)=>{ const idx=i+offset; if(idx<ROWS){ retInputs[idx].value=v; rets[idx]=v; } });
+      setCacheVal(sh.key,'ret',[...rets]); updateFooter(); renderSummary(); scheduleSave();
+      if(i+values.length<ROWS) retInputs[i+values.length].focus();
     });
 
     depInputs.push(dEl); retInputs.push(rEl);
