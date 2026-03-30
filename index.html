@@ -280,10 +280,10 @@ function parseNum(s) {
 }
 
 /* ── FIREBASE ── */
-async function loadFromFirebase(tab, date) {
+async function loadFromFirebase(tab, date, force=false) {
   const dk = dateKey(date);
   if (!cache[tab]) cache[tab] = {};
-  if (cache[tab][dk] !== undefined) return;
+  if (!force && cache[tab][dk] !== undefined) return;
   try {
     const snap = await getDoc(doc(db,'planilla', docId(tab,date)));
     cache[tab][dk] = snap.exists() ? snap.data() : {};
@@ -294,10 +294,10 @@ async function loadFromFirebase(tab, date) {
 }
 
 const cacheRes = {};
-async function loadResFromFirebase(tab, date) {
+async function loadResFromFirebase(tab, date, force=false) {
   const dk = dateKey(date);
   if (!cacheRes[tab]) cacheRes[tab] = {};
-  if (cacheRes[tab][dk] !== undefined) return;
+  if (!force && cacheRes[tab][dk] !== undefined) return;
   try {
     const snap = await getDoc(doc(db,'planilla', docIdRes(tab,date)));
     cacheRes[tab][dk] = snap.exists() ? snap.data() : {};
@@ -337,8 +337,13 @@ async function doResSave() {
 }
 
 function getCacheVal(shift, field, def) {
-  const dk = dateKey(currentDate);
-  return cache[currentTab]?.[dk]?.[`${shift}_${field}`] ?? def;
+  const dk  = dateKey(currentDate);
+  const raw = cache[currentTab]?.[dk]?.[`${shift}_${field}`];
+  if (raw === undefined || raw === null) return def;
+  // Firebase puede devolver objetos {0:'val',1:'val'} en vez de arrays
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'object') return Object.values(raw);
+  return raw;
 }
 function setCacheVal(shift, field, val) {
   const dk = dateKey(currentDate);
@@ -395,7 +400,9 @@ window.toggleResultados = async function() {
     sc.style.display = 'none';
     sb.style.display = 'none';
     rv.classList.add('show');
-    await loadResFromFirebase(currentTab, currentDate);
+    // Forzar recarga fresca para tener NETO actualizado
+    await loadFromFirebase(currentTab, currentDate, true);
+    await loadResFromFirebase(currentTab, currentDate, true);
     renderResultados();
   } else {
     sc.style.display = '';
@@ -462,7 +469,7 @@ function renderResultados() {
     const row = document.createElement('div'); row.className='pyg-row';
 
     const lbl = document.createElement('div'); lbl.className='pyg-turno-lbl';
-    lbl.textContent = sh.short;
+    lbl.innerHTML = `<span style="font-size:14px">${sh.short}</span><br><span style="font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:1px">${sh.label}</span>`;
     row.appendChild(lbl);
 
     // Calcular NETO desde cache de la planilla
@@ -615,7 +622,8 @@ async function renderAll() {
   await loadFromFirebase(currentTab, currentDate);
 
   if (mostrandoRes) {
-    await loadResFromFirebase(currentTab, currentDate);
+    await loadFromFirebase(currentTab, currentDate, true);
+    await loadResFromFirebase(currentTab, currentDate, true);
     document.getElementById('shiftsContainer').style.display = 'none';
     document.getElementById('summaryBar').style.display = 'none';
     document.getElementById('resultadosView').classList.add('show');
