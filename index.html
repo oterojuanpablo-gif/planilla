@@ -318,7 +318,43 @@ async function doSave() {
   try {
     await setDoc(doc(db,'planilla', docId(currentTab,currentDate)), data);
     setStatus('saved','✓ GUARDADO');
+    syncNetoToTurnosData();
   } catch(e) { setStatus('error','✗ ERROR AL GUARDAR'); }
+}
+
+/* ── SYNC NETO → turnosData (para Planilla Control Diario) ── */
+function syncNetoToTurnosData() {
+  try {
+    const dk  = dateKey(currentDate);
+    const tab = currentTab; // ej: "AGE 18"
+    // La planilla unificada usa turnosKey como "AG 18", "AG 19", etc.
+    // SIEMPRE MONO queda igual
+    const turnosKey = tab === 'SIEMPRE MONO' ? 'SIEMPRE MONO'
+                    : tab.replace('AGE ', 'AG ');
+
+    const raw = localStorage.getItem('turnosData');
+    const td  = raw ? JSON.parse(raw) : {};
+    if (!td[turnosKey])       td[turnosKey]       = {};
+    if (!td[turnosKey][dk])   td[turnosKey][dk]   = {};
+
+    const shiftMap = { morning:'manana', afternoon:'tarde', night:'noche' };
+    SHIFTS.forEach(sh => {
+      const deps = getCacheVal(sh.key,'dep', Array(ROWS).fill(''));
+      const rets = getCacheVal(sh.key,'ret', Array(ROWS).fill(''));
+      const bon  = parseNum(getCacheVal(sh.key,'bon',''));
+      const dep  = deps.reduce((a,v)=>a+parseNum(v),0);
+      const ret  = rets.reduce((a,v)=>a+parseNum(v),0);
+      const neto = dep - ret - bon;
+      const tKey = shiftMap[sh.key];
+      if (!td[turnosKey][dk][tKey]) td[turnosKey][dk][tKey] = {};
+      // Escribimos dep/ret/neto en campos reconocidos por T_IN / T_OUT
+      // Usamos 'fichas' para dep y 'fichas_out' para ret (campos genéricos)
+      td[turnosKey][dk][tKey]['_dep_planilla']  = dep;
+      td[turnosKey][dk][tKey]['_ret_planilla']  = ret;
+      td[turnosKey][dk][tKey]['_neto_planilla'] = neto;
+    });
+    localStorage.setItem('turnosData', JSON.stringify(td));
+  } catch(e) { console.warn('syncNetoToTurnosData error:', e); }
 }
 
 let saveResTimer = null;
@@ -640,6 +676,7 @@ async function renderAll() {
 
   document.getElementById('overlay').classList.remove('show');
   setStatus('saved','✓ LISTO');
+  syncNetoToTurnosData();
 }
 
 renderAll();
