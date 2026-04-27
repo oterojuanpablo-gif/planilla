@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PANEL DE CONTROL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #0f1525;
+    --surface2: #141c2e;
+    --border: #1e2d4a;
+    --accent: #1a6bff;
+    --accent2: #00c6a2;
+    --accent3: #FFD600;
+    --danger: #ff4757;
+    --text: #c8d8f0;
+    --text-dim: #4a6080;
+    --text-bright: #ffffff;
+    --glow: rgba(26,107,255,0.15);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Rajdhani', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  #topbar::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+    opacity: 0.6;
+  }
+
+  .logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--accent2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .logo span { color: var(--accent3); }
+
+  .divider { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+
+  /* ── QUICK ACCESS BUTTONS ── */
+  .quick-btns {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .qbtn {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .qbtn:hover { background: var(--glow); border-color: var(--accent); color: var(--text-bright); }
+  .qbtn.active { background: rgba(26,107,255,0.2); border-color: var(--accent); color: var(--accent3); }
+
+  .qbtn .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-blue { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .dot-green { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+  .dot-yellow { background: var(--accent3); box-shadow: 0 0 6px var(--accent3); }
+  .dot-red { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+
+  /* ── LAYOUT TOGGLE ── */
+  .layout-btns {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  .lbtn {
+    width: 32px; height: 28px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-dim);
+    cursor: pointer;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+
+  .lbtn:hover { border-color: var(--accent); color: var(--text); }
+  .lbtn.active { background: rgba(26,107,255,0.2); border-color: var(--accent); color: var(--accent3); }
+
+  /* ── CONTENT AREA ── */
+  #content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .panel + .panel {
+    border-left: 2px solid var(--border);
+  }
+
+  .panel-header {
+    height: 36px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .panel-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .panel-title.loaded { color: var(--accent2); }
+
+  .panel-close {
+    margin-left: auto;
+    width: 22px; height: 22px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .panel-close:hover { border-color: var(--danger); color: var(--danger); }
+
+  .panel iframe {
+    flex: 1;
+    border: none;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+  }
+
+  /* ── EMPTY PANEL ── */
+  .panel-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    background: var(--bg);
+    background-image: 
+      radial-gradient(circle at 50% 50%, rgba(26,107,255,0.04) 0%, transparent 60%),
+      linear-gradient(rgba(30,45,74,0.3) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(30,45,74,0.3) 1px, transparent 1px);
+    background-size: 100% 100%, 40px 40px, 40px 40px;
+  }
+
+  .empty-icon {
+    font-size: 40px;
+    opacity: 0.3;
+  }
+
+  .empty-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .empty-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 220px;
+  }
+
+  .load-btn {
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+
+  .load-btn:hover { background: var(--glow); border-color: var(--accent); color: var(--text-bright); transform: translateX(3px); }
+
+  /* ── SPLITTER ── */
+  #splitter {
+    width: 4px;
+    background: var(--border);
+    cursor: col-resize;
+    flex-shrink: 0;
+    transition: background 0.15s;
+    position: relative;
+    z-index: 10;
+  }
+
+  #splitter:hover, #splitter.dragging { background: var(--accent); }
+
+  /* ── STATUS BAR ── */
+  #statusbar {
+    height: 24px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .status-item {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .status-item .dot { width: 5px; height: 5px; border-radius: 50%; }
+
+  #clock {
+    margin-left: auto;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+  }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+  .panel-empty { animation: fadeIn 0.2s ease; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="logo">PANEL<span>_</span>DSC</div>
+  <div class="divider"></div>
+
+  <div class="quick-btns">
+    <button class="qbtn" onclick="loadInPanel('left','turnos')">
+      <span class="dot dot-green"></span> CONTROL DE TURNOS
+    </button>
+    <button class="qbtn" onclick="loadInPanel('left','negra')">
+      <span class="dot dot-blue"></span> PLANILLA DE CONTROL
+    </button>
+    <button class="qbtn" onclick="loadInPanel('left','unificada')">
+      <span class="dot dot-yellow"></span> PLANILLA UNIFICADA
+    </button>
+    <div class="divider"></div>
+    <button class="qbtn" onclick="loadInPanel('right','turnos')">
+      <span class="dot dot-green"></span> ▶ PANEL 2
+    </button>
+    <button class="qbtn" onclick="loadInPanel('right','negra')">
+      <span class="dot dot-blue"></span> ▶ PANEL 2
+    </button>
+    <button class="qbtn" onclick="loadInPanel('right','unificada')">
+      <span class="dot dot-yellow"></span> ▶ PANEL 2
+    </button>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="layout-btns">
+    <button class="lbtn active" id="btn-single" onclick="setLayout('single')" title="Panel único">▣</button>
+    <button class="lbtn" id="btn-split" onclick="setLayout('split')" title="Pantalla partida">⊞</button>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div id="content">
+  <!-- Panel izquierdo -->
+  <div class="panel" id="panel-left">
+    <div class="panel-header">
+      <span class="dot dot-yellow" style="width:7px;height:7px;border-radius:50%;"></span>
+      <span class="panel-title" id="title-left">PANEL 1</span>
+    </div>
+    <div class="panel-empty" id="empty-left">
+      <div class="empty-icon">⬡</div>
+      <div class="empty-label">Seleccioná una planilla</div>
+      <div class="empty-btns">
+        <button class="load-btn" onclick="loadInPanel('left','turnos')">
+          <span class="dot dot-green" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;"></span>
+          Control de Turnos
+        </button>
+        <button class="load-btn" onclick="loadInPanel('left','negra')">
+          <span class="dot dot-blue" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;"></span>
+          Planilla de Control
+        </button>
+        <button class="load-btn" onclick="loadInPanel('left','unificada')">
+          <span class="dot dot-yellow" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;"></span>
+          Planilla Unificada
+        </button>
+        <button class="load-btn" onclick="loadInPanel('left','lector')">
+          <span class="dot dot-red" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;"></span>
+          Lector de Reportes IA
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Splitter -->
+  <div id="splitter" style="display:none;"></div>
+
+  <!-- Panel derecho -->
+  <div class="panel" id="panel-right" style="display:none;">
+    <div class="panel-header">
+      <span class="dot dot-blue" style="width:7px;height:7px;border-radius:50%;"></span>
+      <span class="panel-title" id="title-right">PANEL 2</span>
+      <button class="panel-close" onclick="closePanel('right')" title="Cerrar panel">✕</button>
+    </div>
+    <div class="panel-empty" id="empty-right">
+      <div class="empty-icon">⬡</div>
+      <div class="empty-label">Seleccioná una planilla</div>
+      <div class="empty-btns">
+        <button class="load-btn" onclick="loadInPanel('right','turnos')">
+          <span class="dot dot-green" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;"></span>
+          Control de Turnos
+        </button>
+        <button class="load-btn" onclick="loadInPanel('right','negra')">
+          <span class="dot dot-blue" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;"></span>
+          Planilla de Control
+        </button>
+        <button class="load-btn" onclick="loadInPanel('right','unificada')">
+          <span class="dot dot-yellow" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;"></span>
+          Planilla Unificada
+        </button>
+        <button class="load-btn" onclick="loadInPanel('right','lector')">
+          <span class="dot dot-red" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;"></span>
+          Lector de Reportes IA
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <div class="status-item">
+    <span class="dot" style="background:var(--accent2);"></span>
+    FIREBASE CONECTADO
+  </div>
+  <div class="status-item">
+    <span class="dot" style="background:var(--accent);"></span>
+    VERCEL ONLINE
+  </div>
+  <div class="status-item" id="status-panels">
+    <span class="dot" style="background:var(--text-dim);"></span>
+    SIN PANELES ACTIVOS
+  </div>
+  <div id="clock">--:--:--</div>
+</div>
+
+<script>
+const URLS = {
+  turnos:    'turnos_v10.html',
+  negra:     '/',
+  unificada: 'planilla_control_UNIFICADA_v4.html',
+  lector:    'lector_reportes.html',
+};
+
+const LABELS = {
+  turnos:    'CONTROL DE TURNOS',
+  negra:     'PLANILLA DE CONTROL',
+  unificada: 'PLANILLA UNIFICADA',
+  lector:    'LECTOR DE REPORTES',
+};
+
+let currentLayout = 'single';
+let loadedLeft = null;
+let loadedRight = null;
+
+function loadInPanel(side, planilla) {
+  const panel = document.getElementById(`panel-${side}`);
+  const empty = document.getElementById(`empty-${side}`);
+  const titleEl = document.getElementById(`title-${side}`);
+
+  // Remove existing iframe
+  const existing = panel.querySelector('iframe');
+  if (existing) existing.remove();
+
+  // Create iframe
+  const iframe = document.createElement('iframe');
+  iframe.src = URLS[planilla];
+  iframe.title = LABELS[planilla];
+  panel.appendChild(iframe);
+
+  // Hide empty state
+  if (empty) empty.style.display = 'none';
+
+  // Update title
+  titleEl.textContent = LABELS[planilla];
+  titleEl.classList.add('loaded');
+
+  // Track loaded
+  if (side === 'left') loadedLeft = planilla;
+  else loadedRight = planilla;
+
+  // Auto switch to split if loading in right
+  if (side === 'right' && currentLayout === 'single') {
+    setLayout('split');
+  }
+
+  updateStatus();
+  highlightActiveBtn(side, planilla);
+}
+
+function closePanel(side) {
+  const panel = document.getElementById(`panel-${side}`);
+  const empty = document.getElementById(`empty-${side}`);
+  const titleEl = document.getElementById(`title-${side}`);
+  const existing = panel.querySelector('iframe');
+  if (existing) existing.remove();
+  if (empty) empty.style.display = '';
+  titleEl.textContent = `PANEL ${side === 'left' ? '1' : '2'}`;
+  titleEl.classList.remove('loaded');
+  if (side === 'left') loadedLeft = null;
+  else loadedRight = null;
+  setLayout('single');
+  updateStatus();
+}
+
+function setLayout(mode) {
+  currentLayout = mode;
+  const right = document.getElementById('panel-right');
+  const splitter = document.getElementById('splitter');
+  const left = document.getElementById('panel-left');
+
+  document.getElementById('btn-single').classList.toggle('active', mode === 'single');
+  document.getElementById('btn-split').classList.toggle('active', mode === 'split');
+
+  if (mode === 'split') {
+    right.style.display = 'flex';
+    splitter.style.display = 'block';
+    left.style.flex = '1';
+    right.style.flex = '1';
+  } else {
+    right.style.display = 'none';
+    splitter.style.display = 'none';
+    left.style.flex = '1';
+  }
+}
+
+function updateStatus() {
+  const el = document.getElementById('status-panels');
+  const parts = [];
+  if (loadedLeft) parts.push(LABELS[loadedLeft]);
+  if (loadedRight) parts.push(LABELS[loadedRight]);
+  if (parts.length === 0) {
+    el.innerHTML = '<span class="dot" style="background:var(--text-dim);"></span> SIN PANELES ACTIVOS';
+  } else {
+    el.innerHTML = `<span class="dot" style="background:var(--accent2);box-shadow:0 0 4px var(--accent2);"></span> ${parts.join(' · ')}`;
+  }
+}
+
+function highlightActiveBtn(side, planilla) {
+  // Could highlight active quick buttons — kept simple for now
+}
+
+// ── Splitter drag ──
+const splitter = document.getElementById('splitter');
+let isDragging = false;
+let startX = 0;
+let startLeftW = 0;
+
+splitter.addEventListener('mousedown', e => {
+  isDragging = true;
+  startX = e.clientX;
+  startLeftW = document.getElementById('panel-left').getBoundingClientRect().width;
+  splitter.classList.add('dragging');
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  const content = document.getElementById('content');
+  const totalW = content.getBoundingClientRect().width - 4; // splitter width
+  const delta = e.clientX - startX;
+  let newLeftW = startLeftW + delta;
+  newLeftW = Math.max(300, Math.min(totalW - 300, newLeftW));
+  const newRightW = totalW - newLeftW;
+  document.getElementById('panel-left').style.flex = `0 0 ${newLeftW}px`;
+  document.getElementById('panel-right').style.flex = `0 0 ${newRightW}px`;
+});
+
+document.addEventListener('mouseup', () => {
+  isDragging = false;
+  splitter.classList.remove('dragging');
+});
+
+// ── Clock ──
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Load unificada by default
+loadInPanel('left', 'unificada');
+</script>
+</body>
+</html>
