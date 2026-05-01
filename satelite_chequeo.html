@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SATÉLITE — CHEQUEO NETO PANEL</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#e8edf5;font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1a1a2e;min-height:100vh;padding:16px;}
+
+.top-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  background:linear-gradient(135deg,#1A3A6B 0%,#2E5FA3 100%);
+  color:#fff;padding:12px 20px;border-radius:8px 8px 0 0;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+.title{font-size:15px;font-weight:700;letter-spacing:1.5px;white-space:nowrap;}
+.date-wrap{display:flex;align-items:center;gap:10px;}
+.btn-nav{background:none;border:1px solid rgba(255,255,255,.35);color:#fff;width:28px;height:28px;
+  border-radius:4px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.btn-nav:hover{background:rgba(255,255,255,.2);}
+#dateTxt{color:#FFD600;font-weight:700;font-size:17px;letter-spacing:2px;cursor:pointer;}
+#dayName{color:rgba(255,255,255,.6);font-size:10px;letter-spacing:3px;text-transform:uppercase;}
+.btn-live{background:rgba(0,200,80,.15);color:#80FFB0;font-weight:700;font-size:12px;letter-spacing:1px;
+  padding:7px 14px;border:1px solid rgba(0,200,80,.4);border-radius:4px;cursor:pointer;white-space:nowrap;}
+.btn-live:hover{background:rgba(0,200,80,.25);}
+.btn-stop{background:rgba(255,60,60,.12);color:#FF8080;font-weight:700;font-size:12px;letter-spacing:1px;
+  padding:7px 14px;border:1px solid rgba(255,60,60,.35);border-radius:4px;cursor:pointer;white-space:nowrap;}
+#liveInd{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.45);white-space:nowrap;}
+#liveInd.on{color:#80FFB0;}
+#liveInd.on::before{content:'● ';animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+.sheet-wrap{background:#fff;border:1px solid #b0c4e0;overflow:auto;box-shadow:0 4px 16px rgba(30,60,120,.1);max-height:calc(100vh - 120px);}
+
+.cards-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  background:linear-gradient(135deg,#0D2B5E 0%,#1A3A6B 100%);border-bottom:2px solid #FFD600;}
+.card{padding:10px 16px;border-right:1px solid rgba(255,255,255,.08);}
+.card:last-child{border-right:none;}
+.card-lbl{font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.08em;margin-bottom:3px;font-weight:700;}
+.card-val{font-size:18px;font-weight:700;color:#fff;font-family:'Courier New',monospace;}
+.card-val.pos{color:#80FFB0;}
+.card-val.neg{color:#FF8080;}
+.card-val.ok{color:#80FFB0;}
+.card-val.mal{color:#FF8080;}
+
+table.sat{width:100%;border-collapse:collapse;min-width:900px;}
+table.sat thead{position:sticky;top:0;z-index:10;}
+table.sat th,table.sat td{border:1px solid #c0d0e8;padding:0 6px;height:30px;font-size:13px;vertical-align:middle;}
+
+thead tr.hdr-g th{background:linear-gradient(180deg,#0D2B5E 0%,#1A3A6B 100%);
+  color:rgba(255,255,255,.4);font-size:9px;letter-spacing:.05em;text-align:center;height:20px;border:1px solid #0d2b5e;}
+thead tr.hdr-g th.gp{color:#FFD600;}
+thead tr.hdr-g th.gs{color:#80FFB0;}
+thead tr.hdr-c th{background:linear-gradient(180deg,#2E5FA3 0%,#1A3A6B 100%);
+  color:#fff;font-weight:700;font-size:11px;letter-spacing:.4px;
+  text-align:center;height:36px;padding:4px 4px;border:1px solid #0d2b5e;text-transform:uppercase;line-height:1.3;}
+
+tr.th-turno td{background:#D6E4F7;color:#0D2B5E;font-weight:700;font-size:13px;letter-spacing:1px;
+  border-top:2px solid #1A3A6B;border-bottom:1px solid #90b4d8;padding-left:10px!important;text-align:left!important;}
+
+tr.ag-tm td{background:#EBF3FF;}
+tr.ag-tt td{background:#FFF3E0;}
+tr.ag-tn td{background:#F3F0FF;}
+tr.ag-tm:hover td,tr.ag-tt:hover td,tr.ag-tn:hover td{filter:brightness(.97);}
+
+td.ag-nm{font-size:12px;color:#666;padding-left:14px!important;text-align:left!important;}
+
+.nc{text-align:right;font-family:'Courier New',monospace;font-size:13px;}
+.nc-pos{color:#1B6B2A;font-weight:700;}
+.nc-neg{color:#C0392B;font-weight:700;}
+.nc-zero{color:#ccc;}
+.nc-vp{color:#C0392B;font-weight:700;}
+.nc-vn{color:#1B6B2A;font-weight:700;}
+
+.neto-pos{color:#1B6B2A;font-weight:900;text-align:right;font-family:'Courier New',monospace;font-size:14px;background:rgba(0,180,60,.07)!important;}
+.neto-neg{color:#C0392B;font-weight:900;text-align:right;font-family:'Courier New',monospace;font-size:14px;background:rgba(200,0,0,.06)!important;}
+.neto-z{color:#ccc;text-align:right;font-family:'Courier New',monospace;}
+
+.dif-ok{color:#bbb;text-align:right;font-family:'Courier New',monospace;font-size:12px;}
+.dif-pos{color:#1B6B2A;font-weight:700;text-align:right;font-family:'Courier New',monospace;background:rgba(0,180,60,.07)!important;}
+.dif-neg{color:#C0392B;font-weight:700;text-align:right;font-family:'Courier New',monospace;background:rgba(200,0,0,.06)!important;}
+
+.toggle-sign{width:28px;height:22px;border-radius:3px;border:1px solid #c0d0e8;
+  font-size:12px;font-weight:700;cursor:pointer;font-family:'Courier New',monospace;
+  background:#f0f5ff;color:#2E5FA3;transition:all .15s;flex-shrink:0;}
+.toggle-sign.minus{background:#FFF0F0;color:#C0392B;border-color:#e0b0b0;}
+.toggle-sign:hover{filter:brightness(.92);}
+.extra-cell{display:flex;align-items:center;gap:2px;padding:2px 3px;}
+input.ed{width:100%;height:100%;border:none;background:transparent;font-family:Calibri,Arial,sans-serif;
+  font-size:13px;text-align:right;outline:none;color:#333;padding:0 3px;}
+input.ed:focus{background:rgba(255,220,50,.22);border-radius:2px;}
+
+/* Botón OBS */
+.btn-obs{background:none;border:1px solid #c0d0e8;border-radius:3px;cursor:pointer;font-size:10px;
+  color:#888;padding:2px 6px;white-space:nowrap;font-family:Calibri,sans-serif;transition:all .15s;}
+.btn-obs:hover{background:#f0f5ff;border-color:#2E5FA3;color:#2E5FA3;}
+.btn-obs.has-obs{border-color:#2E5FA3;color:#2E5FA3;background:#f0f5ff;font-weight:700;}
+
+/* POPUP OBS */
+.obs-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;}
+.obs-overlay.open{display:flex;}
+.obs-box{background:#fff;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.25);width:480px;max-width:95vw;overflow:hidden;}
+.obs-header{background:linear-gradient(135deg,#1A3A6B 0%,#2E5FA3 100%);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+.obs-header span{font-size:13px;font-weight:700;letter-spacing:1px;}
+.obs-close{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.obs-close:hover{background:rgba(255,255,255,.2);}
+.obs-body{padding:14px;}
+.obs-body textarea{width:100%;height:120px;border:1px solid #c0d0e8;border-radius:4px;padding:8px;font-family:Calibri,sans-serif;font-size:13px;color:#1a1a2e;resize:vertical;outline:none;}
+.obs-body textarea:focus{border-color:#2E5FA3;}
+.obs-footer{padding:10px 14px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #e8edf5;}
+.obs-btn-save{background:#2E5FA3;color:#fff;border:none;border-radius:4px;padding:7px 18px;font-weight:700;font-size:12px;letter-spacing:1px;cursor:pointer;}
+.obs-btn-save:hover{background:#1A3A6B;}
+.obs-btn-cancel{background:#e8edf5;color:#555;border:1px solid #c0d0e8;border-radius:4px;padding:7px 14px;font-size:12px;cursor:pointer;}
+
+tr.sub-row td{background:#D0E8FF;color:#0D2B5E;font-weight:700;font-size:12px;
+  border-top:2px solid #2E5FA3;border-bottom:2px solid #2E5FA3;text-align:right;}
+tr.sub-row td:first-child{text-align:left;padding-left:10px;font-size:11px;color:#555;}
+
+tfoot tr td{background:linear-gradient(135deg,#1A3A6B 0%,#2E5FA3 100%);color:#fff;font-weight:700;
+  font-size:13px;border:1px solid #0d2b5e;text-align:right;padding:0 6px;height:34px;}
+tfoot tr td:first-child{color:#FFD600;font-size:11px;letter-spacing:1px;text-align:left;padding-left:10px;}
+tfoot tr td.neto-pos{background:rgba(0,100,40,.5)!important;color:#80FFB0!important;}
+tfoot tr td.neto-neg{background:rgba(150,0,0,.4)!important;color:#FF8080!important;}
+tfoot tr td.dif-ok{color:rgba(255,255,255,.3)!important;background:transparent!important;}
+tfoot tr td.dif-pos{color:#80FFB0!important;background:rgba(0,100,40,.5)!important;}
+tfoot tr td.dif-neg{color:#FF8080!important;background:rgba(150,0,0,.4)!important;}
+
+.footer-bar{background:#1A3A6B;color:#FFD600;border:1px solid #0d2b5e;border-top:none;
+  border-radius:0 0 8px 8px;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.footer-bar span{font-size:10px;letter-spacing:.5px;color:rgba(255,255,255,.4);}
+.btn-csv{font-weight:700;font-size:11px;letter-spacing:1px;padding:6px 14px;border-radius:4px;cursor:pointer;background:#2E5FA3;color:#fff;border:none;}
+.btn-csv:hover{filter:brightness(1.15);}
+#expMsg{font-size:11px;color:#80FFB0;letter-spacing:1px;}
+.empty{text-align:center;padding:2.5rem;color:#aaa;font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="title">🛰 SATÉLITE — CHEQUEO NETO PANEL vs SALIDA BILLETERA</div>
+  <div class="date-wrap">
+    <button class="btn-nav" onclick="changeDate(-1)">◀</button>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+      <span id="dayName"></span>
+      <span id="dateTxt" onclick="document.getElementById('fh').showPicker?document.getElementById('fh').showPicker():document.getElementById('fh').click()" title="Click para elegir fecha"></span>
+      <input type="date" id="fh" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;"/>
+    </div>
+    <button class="btn-nav" onclick="changeDate(1)">▶</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <button class="btn-live" id="btnLive" onclick="iniciarLive()">▶ CONECTAR EN VIVO</button>
+    <button class="btn-stop" id="btnStop" onclick="detenerLive()" style="display:none">■ DETENER</button>
+    <span id="liveInd">sin conexión</span>
+  </div>
+</div>
+
+<div class="sheet-wrap">
+  <div class="cards-bar" id="cardsBar" style="display:none">
+    <div class="card"><div class="card-lbl">NETO PANEL TOTAL</div><div class="card-val" id="cNeto">—</div></div>
+    <div class="card"><div class="card-lbl">SALIDA BILLETERA</div><div class="card-val" id="cSalida">—</div></div>
+    <div class="card"><div class="card-lbl">DIFERENCIA</div><div class="card-val" id="cDif">—</div></div>
+    <div class="card"><div class="card-lbl">ESTADO</div><div class="card-val" id="cEstado">—</div></div>
+    <div class="card"><div class="card-lbl">FÓRMULA</div><div class="card-val" style="font-size:9px;color:rgba(255,255,255,.35);font-family:Calibri,sans-serif;font-weight:400;line-height:1.6;">NETO G/P = Σdep − Σret − bon<br>SALIDA = DESC+CP+S−CR+VERIF+PP+E1+E2</div></div>
+  </div>
+
+  <table class="sat">
+    <thead>
+      <tr class="hdr-g">
+        <th></th>
+        <th class="gp">◀ NETO G/P</th>
+        <th colspan="7" class="gs">SALIDA BILLETERA ▶</th>
+        <th colspan="4">EXTRAS MANUALES</th>
+        <th colspan="2"></th>
+        <th></th>
+      </tr>
+      <tr class="hdr-c">
+        <th style="text-align:left">TURNO / AGENTE</th>
+        <th>NETO G/P</th>
+        <th>DESC</th><th>COLAB PAG</th><th>SUELDO</th><th>COLAB REC</th><th>VERIF</th><th>PAGO PREM</th>
+        <th><div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <input class="th-edit" id="lblEx1" value="EXTRA 1" title="Click para editar"/>
+          <button class="toggle-sign" id="tglEx1" onclick="toggleSign('ex1')" title="Suma o resta">+</button>
+        </div></th>
+        <th><div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <input class="th-edit" id="lblEx2" value="EXTRA 2" title="Click para editar"/>
+          <button class="toggle-sign" id="tglEx2" onclick="toggleSign('ex2')" title="Suma o resta">+</button>
+        </div></th>
+        <th><div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <input class="th-edit" id="lblEx3" value="EXTRA 3" title="Click para editar"/>
+          <button class="toggle-sign" id="tglEx3" onclick="toggleSign('ex3')" title="Suma o resta">+</button>
+        </div></th>
+        <th><div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <input class="th-edit" id="lblEx4" value="EXTRA 4" title="Click para editar"/>
+          <button class="toggle-sign" id="tglEx4" onclick="toggleSign('ex4')" title="Suma o resta">+</button>
+        </div></th>
+        <th>SALIDA BIL.</th><th>DIFERENCIA</th>
+        <th>OBS</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+      <tr><td colspan="13" class="empty">Seleccioná una fecha y presioná ▶ CONECTAR EN VIVO</td></tr>
+    </tbody>
+    <tfoot id="tfoot" style="display:none">
+      <tr>
+        <td>TOTAL DÍA</td>
+        <td id="fNeto"></td>
+        <td class="nc" id="fDesc"></td><td class="nc" id="fColabp"></td><td class="nc" id="fSueldo"></td>
+        <td class="nc" id="fColabre"></td><td class="nc" id="fVerif"></td><td class="nc" id="fPprem"></td>
+        <td class="nc" id="fEx1"></td><td class="nc" id="fEx2"></td><td class="nc" id="fEx3"></td><td class="nc" id="fEx4"></td>
+        <td class="nc" id="fSalida"></td><td id="fDif"></td><td></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<div class="footer-bar">
+  <span>SATÉLITE v2 · SOLO LECTURA · tiempo real desde Firebase · nunca modifica la planilla madre</span>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="btn-csv" onclick="exportCSV()">↓ EXPORTAR CSV</button>
+    <span id="expMsg"></span>
+  </div>
+</div>
+
+<!-- POPUP OBS -->
+<div class="obs-overlay" id="obsOverlay">
+  <div class="obs-box">
+    <div class="obs-header">
+      <span id="obsTitle">OBSERVACIONES</span>
+      <button class="obs-close" onclick="closeObs()">✕</button>
+    </div>
+    <div class="obs-body">
+      <textarea id="obsText" placeholder="Escribí las observaciones para este turno/agente…"></textarea>
+    </div>
+    <div class="obs-footer">
+      <button class="obs-btn-cancel" onclick="closeObs()">Cancelar</button>
+      <button class="obs-btn-save" onclick="saveObs()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const FB_CFG={apiKey:"AIzaSyCGRYyo9EmR0NB3TImzZIP4SuDpDwwMgVc",authDomain:"planilla-perdidas---ganancias.firebaseapp.com",projectId:"planilla-perdidas---ganancias",storageBucket:"planilla-perdidas---ganancias.firebasestorage.app",messagingSenderId:"179047310261",appId:"1:179047310261:web:2e5ad044d98751985d2ffc"};
+
+const AGENTS=[
+  {label:'AGE 18', fbDoc:'AG_18',       fbTab:'AGE_18',      store:'otros'},
+  {label:'AGE 19', fbDoc:'AG_19',       fbTab:'AGE_19',      store:'otros'},
+  {label:'AGE 21', fbDoc:'AG_21',       fbTab:'AGE_20',      store:'otros'},
+  {label:'AGE 22', fbDoc:'AG_22',       fbTab:'AGE_22',      store:'otros'},
+  {label:'AGE 23', fbDoc:'AG_23',       fbTab:'AGE_23',      store:'otros'},
+  {label:'AGE 24', fbDoc:'AG_24',       fbTab:'AGE_24',      store:'otros'},
+  {label:'AGE 25', fbDoc:'AG_25',       fbTab:'AGE_25',      store:'main'},
+  {label:'SIEMPRE MONO',fbDoc:'SIEMPRE_MONO',fbTab:'SIEMPRE_MONO',store:'main'},
+];
+
+const TURNOS=[
+  {key:'manana', fbKey:'morning',   label:'TM — TURNO MAÑANA', cls:'tm'},
+  {key:'tarde',  fbKey:'afternoon', label:'TT — TURNO TARDE',  cls:'tt'},
+  {key:'noche',  fbKey:'night',     label:'TN — TURNO NOCHE',  cls:'tn'},
+];
+
+const T_IN=['fichas','astropay','prex','personal','claro','baja_fichas','transf','colab_rec','carga_fichas'];
+const T_OUT=['fichas_out','astropay_out','prex_out','personal_out','bonos','descartes','colab_pag','pago_otros','carga_otros','retiro','sueldo'];
+const DIAS=['DOMINGO','LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES','SÁBADO'];
+
+let fbApp=null,db=null,unsubs=[],turnosData={},planillaData={},extraData={};
+// signos globales: +1 suma, -1 resta
+let exSigns={ex1:1,ex2:1,ex3:1,ex4:1};
+function lsKey(f){return "sat_extra_"+f;}
+function saveLabels(){try{localStorage.setItem('sat_extra_labels',JSON.stringify({
+  ex1:document.getElementById('lblEx1').value,ex2:document.getElementById('lblEx2').value,
+  ex3:document.getElementById('lblEx3').value,ex4:document.getElementById('lblEx4').value,
+  signs:exSigns}));}catch(e){}}
+function loadLabels(){try{const s=localStorage.getItem('sat_extra_labels');if(s){const l=JSON.parse(s);
+  document.getElementById('lblEx1').value=l.ex1||'EXTRA 1';
+  document.getElementById('lblEx2').value=l.ex2||'EXTRA 2';
+  document.getElementById('lblEx3').value=l.ex3||'EXTRA 3';
+  document.getElementById('lblEx4').value=l.ex4||'EXTRA 4';
+  if(l.signs){exSigns=l.signs;['ex1','ex2','ex3','ex4'].forEach(k=>updateSignBtn(k));}
+}}catch(e){}}
+function toggleSign(k){exSigns[k]=exSigns[k]===1?-1:1;updateSignBtn(k);saveLabels();renderTable();}
+function updateSignBtn(k){const btn=document.getElementById('tgl'+k[0].toUpperCase()+k.slice(1));if(!btn)return;
+  if(exSigns[k]===1){btn.textContent='+';btn.className='toggle-sign';}
+  else{btn.textContent='−';btn.className='toggle-sign minus';}}
+window.toggleSign=toggleSign;
+function saveExtra(){try{localStorage.setItem(lsKey(dateKey(currentDate)),JSON.stringify(extraData));}catch(e){}}
+function loadExtra(){try{const s=localStorage.getItem(lsKey(dateKey(currentDate)));if(s)extraData=JSON.parse(s);}catch(e){}}
+let currentDate=new Date(); currentDate.setHours(12,0,0,0);
+let obsCurrentKey='';
+
+// ── FECHA ──
+function dateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function updateDateDisplay(){
+  document.getElementById('dayName').textContent=DIAS[currentDate.getDay()];
+  document.getElementById('dateTxt').textContent=`${String(currentDate.getDate()).padStart(2,'0')} / ${String(currentDate.getMonth()+1).padStart(2,'0')} / ${currentDate.getFullYear()}`;
+  document.getElementById('fh').value=dateKey(currentDate);
+}
+function changeDate(delta){
+  currentDate=new Date(currentDate.getTime()+delta*86400000);
+  currentDate.setHours(12,0,0,0);
+  updateDateDisplay();
+  if(unsubs.length) iniciarLive();
+}
+document.getElementById('fh').addEventListener('change',e=>{
+  const [y,m,d]=e.target.value.split('-');
+  currentDate=new Date(+y,+m-1,+d,12);
+  updateDateDisplay();
+  if(unsubs.length) iniciarLive();
+});
+updateDateDisplay();
+
+// ── UTILS ──
+function nv(v){const n=parseFloat(String(v||'').replace(/[^0-9.-]/g,''));return isNaN(n)?0:n;}
+function sumArr(a){return (Array.isArray(a)?a:Object.values(a||{})).reduce((s,v)=>s+nv(v),0);}
+function fmtN(n){if(!n)return '';return (n<0?'-':'')+Math.round(Math.abs(n)).toLocaleString('es-AR');}
+function calcVerif(t){if(!t)return 0;return T_IN.reduce((s,f)=>s+nv(t[f]),0)-T_OUT.reduce((s,f)=>s+nv(t[f]),0);}
+function gf(t,f){return t?nv(t[f]):0;}
+function ek(l,k){return `${l}||${k}`;}
+
+// NETO G/P desde colección 'planilla' (igual que la Unificada)
+function calcNetoGP(agFbTab, turnoFbKey, fecha){
+  const doc=planillaData[`${agFbTab}__${fecha}`];
+  if(!doc) return 0;
+  const deps=doc[`${turnoFbKey}_dep`]||[];
+  const rets=doc[`${turnoFbKey}_ret`]||[];
+  const bon =nv(doc[`${turnoFbKey}_bon`]);
+  return sumArr(deps)-sumArr(rets)-bon;
+}
+
+// ── FIREBASE ──
+function initFB(){if(fbApp)return;fbApp=firebase.initializeApp(FB_CFG,'satelite_v3');db=fbApp.firestore();}
+function setInd(msg,cls){const el=document.getElementById('liveInd');el.textContent=msg;el.className=cls||'';}
+
+function iniciarLive(){
+  detenerLive(); initFB();
+  turnosData={}; planillaData={};
+  extraData={};
+  AGENTS.forEach(ag=>TURNOS.forEach(t=>{extraData[ek(ag.label,t.key)]={e1:0,e2:0,e3:0,e4:0,obs:''}}));
+  loadExtra(); // restaurar ediciones guardadas
+  setInd('conectando...','');
+  document.getElementById('btnLive').style.display='none';
+  document.getElementById('btnStop').style.display='';
+
+  const fecha=dateKey(currentDate);
+  let loaded=0;
+  const total=AGENTS.length*2; // turnosData + planilla por agente
+
+  function onLoad(){loaded++;if(loaded>=total){setInd('● EN VIVO','on');}renderTable();}
+
+  AGENTS.forEach(ag=>{
+    // Escuchar turnosData (desc, colab_pag, sueldo, etc.)
+    const u1=db.collection('turnosData').doc(ag.fbDoc).onSnapshot(snap=>{
+      if(snap.exists){try{const r=snap.data();turnosData[ag.fbDoc]=r.data?JSON.parse(r.data):r;}catch(e){turnosData[ag.fbDoc]=snap.data();}}
+      else{turnosData[ag.fbDoc]=null;}
+      onLoad(); renderTable();
+    },err=>{console.error('turnosData',ag.fbDoc,err);onLoad();});
+
+    // Escuchar planilla (NETO G/P)
+    const docId=`${ag.fbTab}__${fecha}`;
+    const u2=db.collection('planilla').doc(docId).onSnapshot(snap=>{
+      planillaData[docId]=snap.exists?snap.data():null;
+      onLoad(); renderTable();
+    },err=>{console.error('planilla',docId,err);onLoad();});
+
+    unsubs.push(u1,u2);
+  });
+}
+
+function detenerLive(){
+  unsubs.forEach(u=>u());unsubs=[];
+  setInd('sin conexión','');
+  document.getElementById('btnLive').style.display='';
+  document.getElementById('btnStop').style.display='none';
+}
+
+// ── RENDER ──
+function renderTable(){
+  const fecha=dateKey(currentDate);
+  const tbody=document.getElementById('tbody');
+  tbody.innerHTML='';
+  let totN=0,totD=0,totCp=0,totS=0,totCr=0,totV=0,totPp=0,totE1=0,totE2=0;
+
+  TURNOS.forEach(turno=>{
+    const htr=document.createElement('tr');
+    htr.className='th-turno';
+    htr.innerHTML=`<td colspan="13">${turno.label}</td>`;
+    tbody.appendChild(htr);
+    let sN=0,sD=0,sCp=0,sS=0,sCr=0,sV=0,sPp=0,sE1=0,sE2=0;
+
+    AGENTS.forEach(ag=>{
+      const tObj=turnosData[ag.fbDoc]?.[fecha]?.[turno.key]||null;
+      const ngp=calcNetoGP(ag.fbTab,turno.fbKey,fecha);
+      const d=gf(tObj,'descartes'),cp=gf(tObj,'colab_pag'),s=gf(tObj,'sueldo');
+      const cr=gf(tObj,'colab_rec'),v=calcVerif(tObj),pp=gf(tObj,'pago_otros');
+      const k=ek(ag.label,turno.key),ex=extraData[k]||{e1:0,e2:0,e3:0,e4:0,obs:''};
+      const se1=ex.e1*exSigns.ex1,se2=ex.e2*exSigns.ex2,se3=ex.e3*exSigns.ex3,se4=ex.e4*exSigns.ex4;
+      sN+=ngp;sD+=d;sCp+=cp;sS+=s;sCr+=cr;sV+=v;sPp+=pp;sE1+=se1;sE2+=se2;
+
+      const salida=d+cp+s-cr+v+pp+se1+se2+se3+se4;
+      const dif=ngp-salida;
+      const kesc=k.replace(/[| ]/g,'_');
+      const nc=ngp>0?'neto-pos':ngp<0?'neto-neg':'neto-z';
+      const dc=Math.abs(dif)<0.5?'dif-ok':dif>0?'dif-pos':'dif-neg';
+      const vc=v>0?'nc-vp':v<0?'nc-vn':'nc-zero';
+      const hasObs=!!(ex.obs&&ex.obs.trim());
+
+      const tr=document.createElement('tr');
+      tr.className=`ag-${turno.cls}`;
+      tr.innerHTML=`
+        <td class="ag-nm">${ag.label}</td>
+        <td class="${nc}" id="np_${kesc}">${fmtN(ngp)}</td>
+        <td class="nc ${d?'nc-neg':'nc-zero'}">${fmtN(d)}</td>
+        <td class="nc ${cp?'nc-neg':'nc-zero'}">${fmtN(cp)}</td>
+        <td class="nc ${s?'nc-neg':'nc-zero'}">${fmtN(s)}</td>
+        <td class="nc ${cr?'nc-pos':'nc-zero'}">${fmtN(cr)}</td>
+        <td class="nc ${vc}">${fmtN(v)}</td>
+        <td class="nc ${pp?'nc-neg':'nc-zero'}">${fmtN(pp)}</td>
+        <td style="padding:0"><div class="extra-cell"><input class="ed" data-k="${k}" data-f="e1" value="${ex.e1||''}" oninput="rcEx(this)" placeholder="0"/></div></td>
+        <td style="padding:0"><div class="extra-cell"><input class="ed" data-k="${k}" data-f="e2" value="${ex.e2||''}" oninput="rcEx(this)" placeholder="0"/></div></td>
+        <td style="padding:0"><div class="extra-cell"><input class="ed" data-k="${k}" data-f="e3" value="${ex.e3||''}" oninput="rcEx(this)" placeholder="0"/></div></td>
+        <td style="padding:0"><div class="extra-cell"><input class="ed" data-k="${k}" data-f="e4" value="${ex.e4||''}" oninput="rcEx(this)" placeholder="0"/></div></td>
+        <td class="nc" id="sal_${kesc}">${fmtN(salida)}</td>
+        <td class="${dc}" id="dif_${kesc}">${Math.abs(dif)<0.5?'OK':fmtN(dif)}</td>
+        <td style="text-align:center;padding:3px 4px">
+          <button class="btn-obs${hasObs?' has-obs':''}" onclick="openObs('${k}','${ag.label} · ${turno.label}')" id="obs_${kesc}">
+            ${hasObs?'📝 ver':'+ obs'}
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const subS=sD+sCp+sS-sCr+sV+sPp+sE1+sE2,subD=sN-subS;
+    const sub=document.createElement('tr');
+    sub.className='sub-row';
+    sub.innerHTML=`<td>↳ SUBTOTAL ${turno.label}</td>
+      <td class="nc ${sN>0?'nc-pos':sN<0?'nc-neg':'nc-zero'}">${fmtN(sN)}</td>
+      <td class="nc">${fmtN(sD)}</td><td class="nc">${fmtN(sCp)}</td><td class="nc">${fmtN(sS)}</td>
+      <td class="nc">${fmtN(sCr)}</td><td class="nc">${fmtN(sV)}</td><td class="nc">${fmtN(sPp)}</td>
+      <td class="nc">${fmtN(sE1)}</td><td class="nc">${fmtN(sE2)}</td><td class="nc">${fmtN(totE3||0)}</td><td class="nc">${fmtN(totE4||0)}</td>
+      <td class="nc">${fmtN(subS)}</td>
+      <td class="${Math.abs(subD)<0.5?'dif-ok':subD>0?'dif-pos':'dif-neg'}">${Math.abs(subD)<0.5?'OK':fmtN(subD)}</td>
+      <td></td>`;
+    tbody.appendChild(sub);
+    // acumular e3/e4 con signo
+    const sE3=TURNOS.reduce((a,_)=>a,0); // placeholder, calculado abajo
+    let tsE3=0,tsE4=0;
+    AGENTS.forEach(ag=>{const ex=extraData[ek(ag.label,turno.key)]||{};tsE3+=(ex.e3||0)*exSigns.ex3;tsE4+=(ex.e4||0)*exSigns.ex4;});
+    totN+=sN;totD+=sD;totCp+=sCp;totS+=sS;totCr+=sCr;totV+=sV;totPp+=sPp;totE1+=sE1;totE2+=sE2;totE3=(totE3||0)+tsE3;totE4=(totE4||0)+tsE4;
+  });
+
+  updateTotals(totN,totD,totCp,totS,totCr,totV,totPp,totE1,totE2,totE3||0,totE4||0);
+  document.getElementById('tfoot').style.display='';
+  document.getElementById('cardsBar').style.display='';
+}
+
+// ── EXTRAS ──
+function rcEx(inp){
+  const k=inp.dataset.k,f=inp.dataset.f;
+  if(!extraData[k])extraData[k]={e1:0,e2:0,e3:0,e4:0,obs:''};
+  extraData[k][f]=parseFloat(inp.value)||0;
+  saveExtra();
+  renderTable();
+  setTimeout(()=>{const els=document.querySelectorAll(`input[data-k="${k}"][data-f="${f}"]`);if(els.length){els[0].focus();const v=els[0].value;els[0].setSelectionRange(v.length,v.length);}},10);
+}
+window.rcEx=rcEx;
+
+// ── OBS POPUP ──
+function openObs(k, title){
+  obsCurrentKey=k;
+  if(!extraData[k])extraData[k]={e1:0,e2:0,e3:0,e4:0,obs:''};
+  document.getElementById('obsTitle').textContent='OBS — '+title;
+  document.getElementById('obsText').value=extraData[k].obs||'';
+  document.getElementById('obsOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('obsText').focus(),50);
+}
+function closeObs(){document.getElementById('obsOverlay').classList.remove('open');}
+function saveObs(){
+  const k=obsCurrentKey;
+  if(!extraData[k])extraData[k]={e1:0,e2:0,e3:0,e4:0,obs:''};
+  extraData[k].obs=document.getElementById('obsText').value;
+  saveExtra();
+  closeObs();
+  renderTable();
+}
+document.getElementById('obsOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('obsOverlay'))closeObs();});
+window.openObs=openObs; window.closeObs=closeObs; window.saveObs=saveObs;
+
+// ── TOTALES ──
+function updateTotals(tN,tD,tCp,tS,tCr,tV,tPp,tE1,tE2,tE3=0,tE4=0){
+  const salida=tD+tCp+tS-tCr+tV+tPp+tE1+tE2+tE3+tE4,dif=tN-salida;
+  const set=(id,v,cls)=>{const el=document.getElementById(id);if(!el)return;el.textContent=v;if(cls!==undefined)el.className=cls;};
+  set('fNeto',fmtN(tN),tN>0?'neto-pos':tN<0?'neto-neg':'neto-z');
+  set('fDesc',fmtN(tD));set('fColabp',fmtN(tCp));set('fSueldo',fmtN(tS));
+  set('fColabre',fmtN(tCr));set('fVerif',fmtN(tV));set('fPprem',fmtN(tPp));
+  set('fEx1',fmtN(tE1));set('fEx2',fmtN(tE2));set('fEx3',fmtN(tE3));set('fEx4',fmtN(tE4));set('fSalida',fmtN(salida));
+  set('fDif',Math.abs(dif)<0.5?'OK':fmtN(dif),Math.abs(dif)<0.5?'dif-ok':dif>0?'dif-pos':'dif-neg');
+  set('cNeto',fmtN(tN)||'—','card-val '+(tN>0?'pos':tN<0?'neg':''));
+  set('cSalida',fmtN(salida)||'—','card-val');
+  set('cDif',fmtN(Math.abs(dif))||'—','card-val '+(Math.abs(dif)<0.5?'ok':'mal'));
+  set('cEstado',Math.abs(dif)<0.5?'OK ✓':'DIFERENCIA','card-val '+(Math.abs(dif)<0.5?'ok':'mal'));
+}
+
+// ── CSV ──
+function exportCSV(){
+  const fecha=dateKey(currentDate);
+  const hdr=['Turno','Agente','Neto G/P','Desc','ColabPag','Sueldo','ColabRec','Verif','PagoPrem','Extra1','Extra2','Extra3','Extra4','SalidaBilletera','Diferencia','Obs'];
+  const rows=[hdr.join(',')];
+  TURNOS.forEach(turno=>{AGENTS.forEach(ag=>{
+    const tObj=turnosData[ag.fbDoc]?.[fecha]?.[turno.key]||null;
+    const ngp=calcNetoGP(ag.fbTab,turno.fbKey,fecha);
+    const d=gf(tObj,'descartes'),cp=gf(tObj,'colab_pag'),s=gf(tObj,'sueldo');
+    const cr=gf(tObj,'colab_rec'),v=calcVerif(tObj),pp=gf(tObj,'pago_otros');
+    const k=ek(ag.label,turno.key),ex=extraData[k]||{e1:0,e2:0,obs:''};
+    const se1c=ex.e1*exSigns.ex1,se2c=ex.e2*exSigns.ex2,se3c=(ex.e3||0)*exSigns.ex3,se4c=(ex.e4||0)*exSigns.ex4;
+    const salida=d+cp+s-cr+v+pp+se1c+se2c+se3c+se4c,dif=ngp-salida;
+    rows.push([turno.label,ag.label,ngp,d,cp,s,cr,v,pp,ex.e1,ex.e2,salida,dif,`"${ex.obs||''}"`].join(','));
+  });});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'}));
+  a.download=`satelite_${fecha}.csv`;a.click();
+  document.getElementById('expMsg').textContent='✓ CSV descargado';
+  setTimeout(()=>document.getElementById('expMsg').textContent='',2500);
+}
+window.exportCSV=exportCSV;
+
+// Persistir nombres de EXTRA 1/2
+document.addEventListener('DOMContentLoaded',()=>{
+  loadLabels();
+  ['lblEx1','lblEx2','lblEx3','lblEx4'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('change',saveLabels);
+  });
+});
+</script>
+</body>
+</html>
